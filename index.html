@@ -78,24 +78,24 @@
 	<hr>
 	<table>
 		<tr>
-			<td width="30%"><label for="numParticles" id="numPointsLabel">Particles = 100</label></td>
-			<td><input id="numParticles" type="number" min="0" max="1000" value="100" onchange="resetPoints()"/></td>
+			<td width="30%"><label for="numParticles" id="numPointsLabel">Particles = 200</label></td>
+			<td><input id="numParticles" type="number" min="0" max="1000" value="200" onchange="resetPoints()"/></td>
 		</tr>
 		<tr>
 			<td><label for="radiusSlider" id="radiusLabel">Radius = 246</label></td>
 			<td><input id="radiusSlider" type="range" class="slider" min="0" max="500" value="246" oninput="radiusLabel.innerText='Radius = '+radiusSlider.value;draw();"/></td>
 		</tr>
 		<tr>
-			<td><label for="pressure" id="pressureLabel"><hr>Pressure = 150</label></td>
-			<td><input id="pressure" type="range" class="slider" min="0" max="900" value="150" oninput="pressureLabel.innerHTML='<hr>Pressure = '+pressure.value;"/></td>
+			<td><label for="pressure" id="pressureLabel"><hr>Pressure = 300</label></td>
+			<td><input id="pressure" type="range" class="slider" min="0" max="900" value="300" oninput="pressureLabel.innerHTML='<hr>Pressure = '+pressure.value;"/></td>
 		</tr>
 		<tr>
-			<td width="30%"><label for="smoothing" id="smoothingLabel">Smoothing = 0</label></td>
-			<td><input id="smoothing" type="range" class="slider" min="0" max="40" value="0" oninput="smoothingLabel.innerText='Smoothing = '+smoothing.value;"/></td>
+			<td width="30%"><label for="smoothing" id="smoothingLabel">Smoothing = 1</label></td>
+			<td><input id="smoothing" type="range" class="slider" min="0" max="40" value="1" oninput="smoothingLabel.innerText='Smoothing = '+smoothing.value;"/></td>
 		</tr>
 		<tr>
 			<td><label for="exponent"><hr>Gravitational Exponent</label></td>
-			<td><input id="exponent" type="number" min="0" max="30" value="3"/></td>
+			<td><input id="exponent" type="number" min="-30" max="30" value="3"/></td>
 		</tr>
 	</table>
 	<hr>
@@ -130,6 +130,7 @@
 			} while(Math.sqrt(dx * dx + dy * dy) > radius);
 			this.vx = 0;
 			this.vy = 0;
+			this.radius = 7; // + Math.random() * 10;
 		}
 	}
 
@@ -170,11 +171,23 @@
 				if(i == j) continue;
 				let dx = particles[i].x - particles[j].x;
 				let dy = particles[i].y - particles[j].y;
-				if(dx == 0) dx = Math.random() * 2 - 1;
-				if(dy == 0) dy = Math.random() * 2 - 1;
 				let dt = Math.sqrt(dx * dx + dy * dy);
-				forcex += (dx / dt) / Math.pow(dt / pressure, exponent) / nParticles;
-				forcey += (dy / dt) / Math.pow(dt / pressure, exponent) / nParticles;
+				if(dt == 0) {
+					particles[j].x += Math.random() * 2 - 1;
+					particles[j].y += Math.random() * 2 - 1;
+				} else if(dt < particles[i].radius + particles[j].radius) { // Handle collisions
+					midx = (particles[i].x + particles[j].x) / 2;
+					midy = (particles[i].y + particles[j].y) / 2;
+					particles[i].x = midx + dx / dt * (particles[i].radius + 1);
+					particles[i].y = midy + dy / dt * (particles[i].radius + 1);
+					particles[j].x = midx - dx / dt * (particles[j].radius + 1);
+					particles[j].y = midy - dy / dt * (particles[j].radius + 1);
+					forcex += (dx / dt) / Math.pow(dt / pressure, exponent) / nParticles;
+					forcey += (dy / dt) / Math.pow(dt / pressure, exponent) / nParticles;
+				} else {
+					forcex += (dx / dt) / Math.pow(dt / pressure, exponent) / nParticles;
+					forcey += (dy / dt) / Math.pow(dt / pressure, exponent) / nParticles;
+				}
 			}
 			particles[i].vx = (particles[i].vx * smooth + forcex) / (smooth + 1);
 			particles[i].vy = (particles[i].vy * smooth + forcey) / (smooth + 1);
@@ -213,7 +226,7 @@
 			}
 
 			ctx.beginPath();
-			ctx.arc(particles[i].x, particles[i].y, 5, 0, 2 * Math.PI);
+			ctx.arc(particles[i].x, particles[i].y, particles[i].radius, 0, 2 * Math.PI);
 			ctx.fill();
 		}
 	}
