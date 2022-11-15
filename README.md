@@ -1,2 +1,1 @@
-# particle-packing
- A particle packing simulation
+#  A particle packing simulation
